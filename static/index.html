@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GST Scam Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      color: #2d3748;
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .subtitle {
+      color: #4a5568;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+    }
+
+    #uploadForm {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 550px;
+      text-align: center;
+      margin: 0 auto;
+      transition: all 0.3s ease;
+    }
+
+    #uploadForm:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .file-input-container {
+      position: relative;
+      margin-bottom: 25px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .file-icon {
+      font-size: 3rem;
+      color: #3f51b5;
+      margin-bottom: 15px;
+    }
+
+    input[type="file"] {
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .file-label {
+      color: #4a5568;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    button {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #303f9f 0%, #3f51b5 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(63, 81, 181, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 5px rgba(63, 81, 181, 0.4);
+    }
+
+    #result {
+      margin-top: 40px;
+      white-space: pre-wrap;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 650px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border-left: 5px solid #3f51b5;
+      font-family: 'Courier New', monospace;
+      display: none;
+    }
+
+    #result.show {
+      display: block;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      #uploadForm, #result {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>GST Scam Detector</h1>
+      <p class="subtitle">Upload your bill image to analyze and verify GST information</p>
+    </header>
+
+    <form id="uploadForm">
+      <div class="file-input-container">
+        <div class="file-icon">📄</div>
+        <label class="file-label" for="imageInput">Select bill image to analyze</label>
+        <input type="file" id="imageInput" accept="image/*" required />
+      </div>
+      <button type="submit">Analyze Bill</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div class="footer">
+      <p>Protect yourself from GST fraud with our intelligent bill scanner</p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const resultDiv = document.getElementById('result');
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const fileInput = document.getElementById('imageInput');
+      if (!fileInput.files.length) {
+        alert('Please select an image file');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+
+      resultDiv.textContent = "⏳ Analyzing...";
+      resultDiv.className = "show";
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          resultDiv.textContent = `❌ Error: ${errorData.error || 'Unknown error'}`;
+          return;
+        }
+
+        const data = await response.json();
+//📜 Extracted Text:
+//${data["Extracted Text"]}
+        resultDiv.textContent = `
+
+✅ GSTIN: ${Array.isArray(data["GSTIN"]) ? data["GSTIN"].join(", ") : data["GSTIN"]}
+🧾 GST Rate: ${data["GST Rate"]}
+🧾 Invoice Type: ${data["Invoice Type"]}
+💰 CGST/SGST: ${data["CGST/SGST"]}
+        `;
+      } catch (err) {
+        resultDiv.textContent = `❌ Request failed: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
